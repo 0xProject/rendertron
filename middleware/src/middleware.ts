@@ -22,22 +22,22 @@ import * as request from 'request';
  * well with pages that require JavaScript.
  */
 export const botUserAgents = [
-  'Baiduspider',
-  'bingbot',
-  'Embedly',
-  'facebookexternalhit',
-  'LinkedInBot',
-  'outbrain',
-  'pinterest',
-  'quora link preview',
-  'rogerbot',
-  'showyoubot',
-  'Slackbot',
-  'TelegramBot',
-  'Twitterbot',
-  'vkShare',
-  'W3C_Validator',
-  'WhatsApp',
+    'Baiduspider',
+    'bingbot',
+    'Embedly',
+    'facebookexternalhit',
+    'LinkedInBot',
+    'outbrain',
+    'pinterest',
+    'quora link preview',
+    'rogerbot',
+    'showyoubot',
+    'Slackbot',
+    'TelegramBot',
+    'Twitterbot',
+    'vkShare',
+    'W3C_Validator',
+    'WhatsApp',
 ];
 
 /**
@@ -45,43 +45,79 @@ export const botUserAgents = [
  * proxied.
  */
 const staticFileExtensions = [
-  'ai', 'avi', 'css', 'dat', 'dmg', 'doc', 'doc', 'exe', 'flv',
-  'gif', 'ico', 'iso', 'jpeg', 'jpg', 'js', 'less', 'm4a', 'm4v',
-  'mov', 'mp3', 'mp4', 'mpeg', 'mpg', 'pdf', 'png', 'ppt', 'psd',
-  'rar', 'rss', 'svg', 'swf', 'tif', 'torrent', 'ttf', 'txt', 'wav',
-  'wmv', 'woff', 'xls', 'xml', 'zip',
+    'ai',
+    'avi',
+    'css',
+    'dat',
+    'dmg',
+    'doc',
+    'doc',
+    'exe',
+    'flv',
+    'gif',
+    'ico',
+    'iso',
+    'jpeg',
+    'jpg',
+    'js',
+    'less',
+    'm4a',
+    'm4v',
+    'mov',
+    'mp3',
+    'mp4',
+    'mpeg',
+    'mpg',
+    'pdf',
+    'png',
+    'ppt',
+    'psd',
+    'rar',
+    'rss',
+    'svg',
+    'swf',
+    'tif',
+    'torrent',
+    'ttf',
+    'txt',
+    'wav',
+    'wmv',
+    'woff',
+    'xls',
+    'xml',
+    'zip',
 ];
 
 /**
  * Options for makeMiddleware.
  */
 export interface Options {
-  /**
-   * Base URL of the Rendertron proxy service. Required.
-   */
-  proxyUrl: string;
+    /**
+     * Base URL of the Rendertron proxy service. Required.
+     */
+    proxyUrl: string;
 
-  /**
-   * Regular expression to match user agent to proxy. Defaults to a set of bots
-   * that do not perform well with pages that require JavaScript.
-   */
-  userAgentPattern?: RegExp;
+    /**
+     * Regular expression to match user agent to proxy. Defaults to a set of bots
+     * that do not perform well with pages that require JavaScript.
+     */
+    userAgentPattern?: RegExp;
 
-  /**
-   * Regular expression used to exclude request URL paths. Defaults to a set of
-   * typical static asset file extensions.
-   */
-  excludeUrlPattern?: RegExp;
+    /**
+     * Regular expression used to exclude request URL paths. Defaults to a set of
+     * typical static asset file extensions.
+     */
+    excludeUrlPattern?: RegExp;
 
-  /**
-   * Force web components polyfills to be loaded and enabled. Defaults to false.
-   */
-  injectShadyDom?: boolean;
+    /**
+     * Force web components polyfills to be loaded and enabled. Defaults to false.
+     */
+    injectShadyDom?: boolean;
 
-  /**
-   * Millisecond timeout for proxy requests. Defaults to 11000 milliseconds.
-   */
-  timeout?: number;
+    /**
+     * Millisecond timeout for proxy requests. Defaults to 11000 milliseconds.
+     */
+    timeout?: number;
 }
 
 /**
@@ -89,41 +125,36 @@ export interface Options {
  * Rendertron bot rendering service.
  */
 export function makeMiddleware(options: Options): express.Handler {
-  if (!options || !options.proxyUrl) {
-    throw new Error('Must set options.proxyUrl.');
-  }
-  let proxyUrl = options.proxyUrl;
-  if (!proxyUrl.endsWith('/')) {
-    proxyUrl += '/';
-  }
-  const userAgentPattern =
-    options.userAgentPattern || new RegExp(botUserAgents.join('|'), 'i');
-  const excludeUrlPattern = options.excludeUrlPattern ||
-    new RegExp(`\\.(${staticFileExtensions.join('|')})$`, 'i');
-  const injectShadyDom = !!options.injectShadyDom;
-  // The Rendertron service itself has a hard limit of 10 seconds to render, so
-  // let's give a little more time than that by default.
-  const timeout = options.timeout || 11000;  // Milliseconds.
+    if (!options || !options.proxyUrl) {
+        throw new Error('Must set options.proxyUrl.');
+    }
+    let proxyUrl = options.proxyUrl;
+    if (!proxyUrl.endsWith('/')) {
+        proxyUrl += '/';
+    }
+    const userAgentPattern = options.userAgentPattern || new RegExp(botUserAgents.join('|'), 'i');
+    const excludeUrlPattern = options.excludeUrlPattern || new RegExp(`\\.(${staticFileExtensions.join('|')})$`, 'i');
+    const injectShadyDom = !!options.injectShadyDom;
+    // The Rendertron service itself has a hard limit of 10 seconds to render, so
+    // let's give a little more time than that by default.
+    const timeout = options.timeout || 11000; // Milliseconds.
 
-  return function rendertronMiddleware(req, res, next) {
-    const ua = req.headers['user-agent'];
-    if (ua === undefined || !userAgentPattern.test(ua) ||
-      excludeUrlPattern.test(req.path)) {
-      next();
-      return;
-    }
-    const incomingUrl =
-      req.protocol + '://' + req.get('host') + req.originalUrl;
-    let renderUrl = proxyUrl + encodeURIComponent(incomingUrl);
-    if (injectShadyDom) {
-      renderUrl += '?wc-inject-shadydom=true';
-    }
-    request({ url: renderUrl, timeout }, (e) => {
-      if (e) {
-        console.error(
-          `[rendertron middleware] ${e.code} error fetching ${renderUrl}`);
-        next();
-      }
-    }).pipe(res);
-  };
+    return function rendertronMiddleware(req, res, next) {
+        const ua = req.headers['user-agent'];
+        if (ua === undefined || !userAgentPattern.test(ua) || excludeUrlPattern.test(req.path)) {
+            next();
+            return;
+        }
+        const incomingUrl = req.protocol + '://' + req.get('host') + req.originalUrl;
+        let renderUrl = proxyUrl + encodeURIComponent(incomingUrl);
+        if (injectShadyDom) {
+            renderUrl += '?wc-inject-shadydom=true';
+        }
+        request({ url: renderUrl, timeout }, e => {
+            if (e) {
+                console.error(`[rendertron middleware] ${e.code} error fetching ${renderUrl}`);
+                next();
+            }
+        }).pipe(res);
+    };
 }
