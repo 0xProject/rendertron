@@ -161,5 +161,4 @@ if (!module.parent) {
   rendertron.initialize();
 
   process.on('uncaughtException', logUncaughtError);
-  //process.on('unhandledRejection', logUncaughtError);
 }

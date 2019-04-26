@@ -1,5 +1,3 @@
-'use strict';
-
 import * as Koa from 'koa';
 import * as Aws from 'aws-sdk';
 
@@ -9,7 +7,7 @@ Aws.config.update({
   secretAccessKey: process.env['AWS_SECRET_KEY']
 });
 
-const CACHE_DURATION_MILLISECONDS = 60 * 4 * 60 * 1000;
+const CACHE_DURATION_MILLISECONDS = 60 * 24 * 60 * 1000;
 
 const TABLE_NAME = 'rendertron-cache';
 
