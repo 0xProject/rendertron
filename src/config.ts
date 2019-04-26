@@ -25,32 +25,29 @@ import * as path from 'path';
 const CONFIG_PATH = path.resolve(__dirname, '../config.json');
 
 export type Config = {
-  datastoreCache: boolean;
-  dynamoCache: boolean;
-  timeout: number;
-  port: string;
-  width: number;
-  height: number;
+    datastoreCache: boolean;
+    dynamoCache: boolean;
+    timeout: number;
+    port: string;
+    width: number;
+    height: number;
 };
 
 export class ConfigManager {
-  public static config: Config = {
-    datastoreCache: false,
-    dynamoCache: true,
-    timeout: 10000,
-    port: '3000',
-    width: 1000,
-    height: 1000
-  };
+    public static config: Config = {
+        datastoreCache: false,
+        dynamoCache: true,
+        timeout: 10000,
+        port: '3000',
+        width: 1000,
+        height: 1000,
+    };
 
-  static async getConfiguration(): Promise<Config> {
-    // Load config.json if it exists.
-    if (fse.pathExistsSync(CONFIG_PATH)) {
-      ConfigManager.config = Object.assign(
-        ConfigManager.config,
-        await fse.readJson(CONFIG_PATH)
-      );
+    static async getConfiguration(): Promise<Config> {
+        // Load config.json if it exists.
+        if (fse.pathExistsSync(CONFIG_PATH)) {
+            ConfigManager.config = Object.assign(ConfigManager.config, await fse.readJson(CONFIG_PATH));
+        }
+        return ConfigManager.config;
     }
-    return ConfigManager.config;
-  }
 }
